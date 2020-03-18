@@ -60,10 +60,14 @@ a:hover {
   height: 90%;
 }
 
-.colors {
+.color-palette {
   width: 100%;
   height: 5%;
-  background-color: green;
+
+  border-top: 1px solid black;
+  padding-top: 1%;
+  display: flex;
+  justify-content: space-between;
 }
 
 .secret {
@@ -110,9 +114,28 @@ a:hover {
   width: 30%;
   height: 100%;
 }
-.color{
+
+.color {
   width: 35px;
   height: 35px;
   border-radius: 50%;
   border: 0.1px solid black;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.clickable:hover {
+  filter: brightness(70%);
+  width: 38px;
+  height: 38px;
+  border: 1px solid black;
+}
+
+.selected {
+  filter: brightness(90%);
+  width: 38px;
+  height: 38px;
+  border: 1px solid black;
 }
