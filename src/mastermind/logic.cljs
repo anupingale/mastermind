@@ -5,12 +5,11 @@
 (defn generate-code []
   (take 5 (shuffle colors)))
 
-(defn get-reds [c p]
-  (count (filter true? (map #(= %1 %2) c p))))
+(defn get-reds [code pattern]
+  (count (filter true? (map #(= %1 %2) code pattern))))
 
-(defn get-whites [c p]
-  (- (count (filter true? (map #(some (partial = %1) c) (set p)))) (get-reds c p)))
+(defn get-whites [code pattern]
+  (- (count (filter true? (map #(some (partial = %1) code) (set pattern)))) (get-reds code pattern)))
 
-(defn get-result [c p]
-  {:r (get-reds c p)
-   :w (get-whites c p)})
+(defn get-result [code pattern]
+  (into [] (take 5 (concat (repeat (get-reds code pattern) :r) (repeat (get-whites code pattern) :w) (repeat 5 :other)))))
