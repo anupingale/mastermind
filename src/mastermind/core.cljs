@@ -7,8 +7,8 @@
 (defonce game (r/atom {
                        :code           [1 2 3 4 5]
                        :current-turn   0
-                       :attempts       (into [] (repeat 12 {:guess [8 8 8 8 8] :result []}))
-                       :selected-color 1
+                       :attempts       (into [] (repeat 12 {:guess [8 8 8 8 8] :result [:other :other :other :other :other]}))
+                       :selected-color 0
                        :won?           false
                        }))
 
@@ -24,20 +24,9 @@
            :key     index
            :onClick (when is-clickable (partial set-color turn index))}]))
 
-(defn draw-color-palatte [index color]
-  [:div {:style   {:background (str "radial-gradient(circle at 65% 15%, white 1px, " color " 60%)")}
-         :class   ["color" "clickable" (when (= index (:selected-color @game)) "selected")]
-         :onClick (fn [] (swap! game assoc :selected-color index))
-         :key     index}])
-
 (defn draw-attempt [attempt turn]
-  [:div {:class "attempt"}
+  [:div {:class ["attempt" (when (= turn (:current-turn @game)) "current-turn")]}
    (map-indexed (partial draw-color turn) attempt)
-   ])
-
-(defn draw-empty-attempt-result [index]
-  [:div {:class "result"
-         :key   index}
    ])
 
 (defn draw-attempt-result-colors [index result]
@@ -48,11 +37,19 @@
 
 (defn draw-attempt-result [result]
   [:div {:class "attempt-result"}
-   (if (empty? result) (map-indexed draw-empty-attempt-result (:code @game)) (map-indexed draw-attempt-result-colors result))
+   (map-indexed draw-attempt-result-colors result)
    ])
+
+(defn draw-color-palatte [index color]
+  [:div {:style   {:background (str "radial-gradient(circle at 65% 15%, white 1px, " color " 60%)")}
+         :class   ["color" "clickable" (when (= index (:selected-color @game)) "selected")]
+         :onClick (fn [] (swap! game assoc :selected-color index))
+         :key     index}])
+
 
 (defn validate-guess []
   (swap! game assoc :attempts (update-in (:attempts @game) [(:current-turn @game) :result] (partial l/get-result (:code @game) (:guess ((:attempts @game) (:current-turn @game))))))
+  (swap! game assoc :won? (l/won? (:code @game) (:guess ((:attempts @game) (:current-turn @game)))))
   (swap! game assoc :current-turn (inc (:current-turn @game)))
   )
 
@@ -68,16 +65,21 @@
      [:header {:class "header"} "Mastermind"]
      [:div {:class "board"}
       [:div {:class "secret"}
-       [:div {:class "code"}]
-       [:button {:class   ["submit-btn" (when-not is-code-complete "disable-btn")]
-                 :onClick (when is-code-complete validate-guess)
-                 } "submit"]]
+       [:div {:class "attempt"}
+        (when (:won? @game) (map-indexed (partial draw-color nil) (:code @game)))
+        ]
+       [:div {:class "btn-wrapper"}
+        [:button {:class   ["submit-btn" (when-not is-code-complete "disable-btn")]
+                  :onClick (when is-code-complete validate-guess)
+                  } "submit"]]]
       [:div {:class "guesses"}
        (map-indexed draw-board (:attempts @game))]
       ]
      [:div {:class "color-palette"}
-      (map-indexed draw-color-palatte colors)
-      ]]))
+      (map-indexed draw-color-palatte (drop-last colors))
+      ]]
+    )
+  )
 
 ;; -------------------------
 ;; Initialize app

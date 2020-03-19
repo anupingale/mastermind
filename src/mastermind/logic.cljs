@@ -13,3 +13,7 @@
 
 (defn get-result [code pattern]
   (into [] (take 5 (concat (repeat (get-reds code pattern) :r) (repeat (get-whites code pattern) :w) (repeat 5 :other)))))
+
+(defn won? [code pattern]
+  (every? (partial = :r) (get-result code pattern))
+  )
