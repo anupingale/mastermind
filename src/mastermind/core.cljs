@@ -1,43 +1,42 @@
 (ns mastermind.core
   (:require
     [reagent.core :as r]))
-(def colors ["red" "green" "purple" "maroon" "blue" "darkorange" "darkgoldenrod" "black"])
+(def colors ["red" "green" "purple" "maroon" "blue" "darkorange" "darkgoldenrod" "black" "gray"])
 (def results {:r "red" :w "white"})
 (defonce game (r/atom {
                        :code           [1 2 3 4 5]
                        :current-turn   0
-                       :attempts       (into [] (repeat 12 {:guess [0 5 3 2 4] :result [:r :w :r :e :w]}))
-                       :selected-color 2
+                       :attempts       (into [] (repeat 12 {:guess [8 8 8 8 8] :result []}))
+                       :selected-color 0
                        :won?           false
                        }))
 
-(defn draw-color [index attempt]
-  [:div {:style {:background (str "radial-gradient(circle at 65% 15%, white 1px, " (colors attempt) " 60%)")}
-         :class "color"
-         :key   index}])
+(defn change [index arr] (assoc arr index (:selected-color @game)))
+
+(defn set-color [turn index]
+  (swap! game assoc :attempts (update-in (:attempts @game) [turn :guess] (partial change index))))
+
+(defn draw-color [turn index attempt]
+  (let [is-clickable (= turn (:current-turn @game))]
+    [:div {:style   {:background (str "radial-gradient(circle at 65% 15%, white 1px, " (colors attempt) " 60%)")}
+           :class   ["color" (when is-clickable "clickable")]
+           :key     index
+           :onClick (when is-clickable (partial set-color turn index))}]))
 
 (defn draw-color-palatte [index color]
   [:div {:style {:background (str "radial-gradient(circle at 65% 15%, white 1px, " color " 60%)")}
          :class ["color" "clickable" (when (= index (:selected-color @game)) "selected")]
-         :key   index}]
-  )
+         :key   index}])
 
-(defn draw-empty [index]
-  [:div {:style {:background (str "radial-gradient(circle at 60% 20%, white 1px, gray 60%)")}
-         :class "color"
-         :key   index}
-   ])
-
-(defn draw-attempt [attempt]
+(defn draw-attempt [attempt turn]
   [:div {:class "attempt"}
-   (if (empty? attempt) (map-indexed draw-empty (:code @game)) (map-indexed draw-color attempt))
+   (map-indexed (partial draw-color turn) attempt)
    ])
 
 (defn draw-empty-attempt-result [index]
   [:div {:class "result"
          :key   index}
-   ]
-  )
+   ])
 
 (defn draw-attempt-result-colors [index result]
   [:div {:style {:background-color (results result)}
@@ -52,7 +51,7 @@
 
 (defn draw-board [turn attempt]
   [:div {:class "guess" :key turn}
-   (draw-attempt (:guess attempt))
+   (draw-attempt (:guess attempt) turn)
    (draw-attempt-result (:result attempt))
    ])
 
