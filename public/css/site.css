@@ -45,6 +45,8 @@ a:hover {
   height: 100%;
   padding: 2px;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   background-color: rgba(112, 113, 128, 0.25);
 }
 
@@ -58,6 +60,41 @@ a:hover {
 .board {
   width: 100%;
   height: 90%;
+}
+
+
+.modal {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+
+  width: 80%;
+  max-width: 400px;
+
+  transform: translate(-50%, -50%);
+  box-shadow: 2px 2px 20px rgb(158, 158, 158);
+  background-color: #dedede;
+  border-radius: 10px;
+  display: none;
+  z-index: 1;
+  text-align: center;
+}
+
+.close {
+  width: 50%;
+  height: 50px;
+
+  margin: 0 auto 5px;
+  display: block;
+  border: none;
+
+  background: cornflowerblue;
+  font-size: large;
+  font-weight: bold;
+
+  border-radius: 5px;
+  color: #fff;
+  cursor: pointer;
 }
 
 .color-palette {
@@ -79,12 +116,8 @@ a:hover {
 }
 
 .code {
-  width: 70%;
-  height: 100%;
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  border-radius: 10px;
+  background: repeating-linear-gradient(-45deg, #6c6c6c, #6c6c6c 10px, #868686 0, #868686 20px);
 }
 
 .btn-wrapper {
@@ -190,3 +223,10 @@ a:hover {
   border: 0.1px solid black;
 }
 
+
+.display-block {
+  display: block;
+}
+.disable-pointer-events{
+  pointer-events: none;
+}

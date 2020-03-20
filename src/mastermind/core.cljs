@@ -3,14 +3,21 @@
     [reagent.core :as r]
     [mastermind.logic :as l]))
 (def colors ["red" "green" "purple" "maroon" "blue" "darkorange" "darkgoldenrod" "black" "gray"])
-(def results {:r "red" :w "white"})
-(defonce game (r/atom {
-                       :code           [1 2 3 4 5]
-                       :current-turn   0
-                       :attempts       (into [] (repeat 12 {:guess [8 8 8 8 8] :result [:other :other :other :other :other]}))
-                       :selected-color 0
-                       :won?           false
-                       }))
+(def results {:r "red" :w "white" :other "gray"})
+
+(defn get-game []
+  {
+   :code           (l/generate-code)
+   :current-turn   0
+   :attempts       (into [] (repeat 12 {:guess [8 8 8 8 8] :result [:other :other :other :other :other]}))
+   :selected-color 0
+   :won?           false
+   })
+
+(defonce game (r/atom (get-game)))
+
+(defn reset-game []
+  (swap! game get-game))
 
 (defn change [index arr] (assoc arr index (:selected-color @game)))
 
@@ -48,9 +55,12 @@
 
 
 (defn validate-guess []
-  (swap! game assoc :attempts (update-in (:attempts @game) [(:current-turn @game) :result] (partial l/get-result (:code @game) (:guess ((:attempts @game) (:current-turn @game))))))
-  (swap! game assoc :won? (l/won? (:code @game) (:guess ((:attempts @game) (:current-turn @game)))))
-  (swap! game assoc :current-turn (inc (:current-turn @game)))
+  (let [current-turn (:current-turn @game)
+        attempts (:attempts @game)]
+    (when (< current-turn 12) (do
+                                (swap! game assoc :attempts (update-in attempts [current-turn :result] (partial l/get-result (:code @game) (:guess (attempts current-turn)))))
+                                (swap! game assoc :won? (l/won? (:code @game) (:guess (attempts current-turn))))))
+    (swap! game assoc :current-turn (inc current-turn)))
   )
 
 (defn draw-board [turn attempt]
@@ -60,18 +70,26 @@
    ])
 
 (defn home-page []
-  (let [is-code-complete (every? (partial not= 8) (:guess ((:attempts @game) (:current-turn @game))))]
+  (let [is-code-complete (when (< (:current-turn @game) 12) (every? (partial not= 8) (:guess ((:attempts @game) (:current-turn @game)))))]
     [:div {:class "container"}
      [:header {:class "header"} "Mastermind"]
-     [:div {:class "board"}
+     [:div {:class ["modal" (when (or (:won? @game) (> (:current-turn @game) 11)) "display-block")]
+            :id    "popup"}
+      [:p (if (:won? @game) "Won the Game" "Lose the Game")]
+      [:button {:id      "close"
+                :class   "close"
+                :onClick reset-game}
+       "Play Again"
+       ]]
+     [:div {:class ["board" (when (or (:won? @game) (> (:current-turn @game) 11)) "disable-pointer-events")]}
       [:div {:class "secret"}
-       [:div {:class "attempt"}
-        (when (:won? @game) (map-indexed (partial draw-color nil) (:code @game)))
+       [:div {:class ["attempt" "code"]}                    ;code class
+        (when (or (:won? @game) (> (:current-turn @game) 11)) (map-indexed (partial draw-color nil) (:code @game)))
         ]
        [:div {:class "btn-wrapper"}
         [:button {:class   ["submit-btn" (when-not is-code-complete "disable-btn")]
                   :onClick (when is-code-complete validate-guess)
-                  } "submit"]]]
+                  } "Submit"]]]
       [:div {:class "guesses"}
        (map-indexed draw-board (:attempts @game))]
       ]
